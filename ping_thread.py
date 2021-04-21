@@ -21,12 +21,15 @@ class PingThread(LogThread):
 
     def run(self):
         while True:
-            r = requests.post("{}{}/ping".format(FLASK_URL, self.mac))
-            code = r.status_code
-            if code < 300:
-                if not self.sniffer_thread.is_alive():
-                    self.sniffer_thread.start()
-            else:
+            try:
+                r = requests.post("{}{}/ping".format(FLASK_URL, self.mac))
+                code = r.status_code
+                if code < 300:
+                    if not self.sniffer_thread.is_alive():
+                        self.sniffer_thread.start()
+                else:
+                    raise Exception("HTTP error")
+            except:
                 self.sniffer_thread.kill()
                 self.sniffer_thread = SnifferThread('Sniffer')
             time.sleep(PERIOD_CHECK)
