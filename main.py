@@ -8,11 +8,12 @@ from dotenv import get_variable
 
 from ping_thread import PingThread
 
-FLASK_URL = get_variable('.env', 'FLASK_URL')
-
 interface = "wlan0"
-base_path_scanner = get_variable('.env', 'BASE_PATH_SCANNER')
-assets_path_scanner = join(base_path_scanner, get_variable('.env', 'RELATIVE_PATH_ASSETS'))
+path_env = '/home/pi/smart-directions-anchor-init/.env'
+
+FLASK_URL = get_variable(path_env, 'FLASK_URL')
+base_path_scanner = get_variable(path_env, 'BASE_PATH_SCANNER')
+assets_path_scanner = join(base_path_scanner, get_variable(path_env, 'RELATIVE_PATH_ASSETS'))
 
 if __name__ == '__main__':
     # execute command to get our own mac address (wlan)

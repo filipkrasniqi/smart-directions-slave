@@ -6,8 +6,10 @@ from dotenv import get_variable
 from log_thread import LogThread
 from sniffer_thread import SnifferThread
 
-FLASK_URL = get_variable('.env', 'FLASK_URL')
-PERIOD_CHECK = int(get_variable('.env', 'PERIOD_CHECK'))
+path_env = '/home/pi/smart-directions-anchor-init/.env'
+
+FLASK_URL = get_variable(path_env, 'FLASK_URL')
+PERIOD_CHECK = int(get_variable(path_env, 'PERIOD_CHECK'))
 
 '''
 With periodicity PERIOD_CHECK, a ping is sent to the server that confirms it is still alive.
