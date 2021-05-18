@@ -1,5 +1,9 @@
 # coding=utf-8
 import os
+import time
+import subprocess
+
+from SubscriberThread import SubscriberThread
 
 import requests
 from os.path import join
@@ -8,12 +12,16 @@ from dotenv import get_variable
 
 from ping_thread import PingThread
 
+from statistics import mean
+
 interface = "wlan0"
 path_env = '/home/pi/smart-directions-anchor-init/.env'
 
 FLASK_URL = get_variable(path_env, 'FLASK_URL')
 base_path_scanner = get_variable(path_env, 'BASE_PATH_SCANNER')
 assets_path_scanner = join(base_path_scanner, get_variable(path_env, 'RELATIVE_PATH_ASSETS'))
+face_id = get_variable(path_env, 'FACE_ID')
+BROKER_IP = get_variable(path_env, 'BROKER_IP')
 
 if __name__ == '__main__':
     # execute command to get our own mac address (wlan)
@@ -22,58 +30,46 @@ if __name__ == '__main__':
     own_mac = os.popen(command).read()
     own_mac = own_mac[:-1]
 
-    # executes a scan for WIFI RSSI values
-    command = "iw dev {} scan".format(interface)
-    output = os.popen(command).read()
-    results = output.split("BSS ")
-    results = list(filter(lambda x: "wlan0)" in x, results))
-    dict_sniffed = []   # we build a mapping [{mac, ssid, rssi}] to be localized via the fingerprinting
+    # executes a scan for BLEI values
+    #command = "sudo btmon" #"iw dev {} scan".format(interface)
+    command = "sudo timeout 10s btmon"
+    process = os.popen(command)
+    output = process.read()
+    process.close()
+    #time.sleep(10)
+    print(output)
+    results = output.split("HCI Event: ")
+    results = list(filter(lambda x: "raspberryp" in x, results))
+
+    dict_sniffed = {}   # we build a mapping [{mac, ssid, rssi}] to be localized via the fingerprinting
+    
+    print(results,"\n\t")
     for r in results:
-        lines = r.split("\n\t")
-        mac = lines[0].replace("(on wlan0)", "")#re.sub("\(on wlan0\)", '', lines[0])
-        rssi = float(lines[6].replace("signal: ", "").replace(" dBm", ""))
-        ssid = lines[8].replace("SSID: ", '')
-        #if "TIM-23" in ssid or "TP-LINK" in ssid or "KA" in ssid:
-        dict_sniffed.append({'mac': mac, 'ssid': ssid, 'rssi': rssi})
+        mac = r[230:247]
+        rssi = r[334:337]
+        
+        if mac in dict_sniffed:
+            dict_sniffed[mac].append(int(rssi))
+        else:
+            dict_sniffed.update({mac: []})
+    
+    dict_sniffed = {mac: mean(dict_sniffed[mac]) for mac in dict_sniffed.keys()}
 
-    # get id of the SD instance to which we currently refer to
-    try:
-        with open(join(assets_path_scanner, "node.setup"), 'r') as file:
-            id_sd = int(file.readline())
-    except:
-        print("WARNING: wrong")
-        exit(0)
+    max_rssi = float("-inf")
+    best_mac = None
+    for mac in dict_sniffed.keys():
+        if dict_sniffed[mac] > max_rssi:
+            max_rssi = dict_sniffed[mac]
+            best_mac = mac
+    assert best_mac is not None, "Not found"
+    print(dict_sniffed)
 
-    file_info_path = join(assets_path_scanner, "node.info")
-    # if needed, init the anchor
-    try:
-        with open(file_info_path, 'r') as file:
-            id_node = int(file.readline())
-    except:
-        print("WARNING: init required")
+    print("I AM THE BEEEEST {}".format(best_mac))
 
-        # build body for request
-        data = {'id_sd': id_sd, 'wifi': dict_sniffed}
-        r = requests.post("{}{}/init".format(FLASK_URL, own_mac), json=data)
-        response = r.json()
-        id_node, id_building = response['id_node'], response['id_building']
-        try:
-            with open(file_info_path, 'w') as file:
-                file.write(str(id_node))
-                file.close()
-        except Exception as e:
-            print("ERROR: not able to write {}".format(e))
-            exit(0)
-
-    print("SUCCESS: init went fine. Starting to scan")
-    print()
-    print()
-
-    # start timer executing ping thread: we check server is alive and eventually execute sniffer code
-    ping_scheduler = PingThread('Ping', own_mac)
-    ping_scheduler.start()
+    SubscriberThreadInstance = SubscriberThread(best_mac, own_mac, face_id, BROKER_IP)
+    SubscriberThreadInstance.start()
 
     print("ENDED")
-
+    
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/
