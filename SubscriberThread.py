@@ -8,8 +8,8 @@ class SubscriberThread(LogThread):
         LogThread.__init__(self, "MQTT")
         self.client = mqtt.Client(client_id=own_mac)
         self.client.username_pw_set(username="slave", password="slave")
-        print(own_mac)
-        print(BROKER_IP)
+        #print(own_mac)
+        #print(BROKER_IP)
         self.client.connect(BROKER_IP, 1884, 60)
         self.client.on_connect = self.on_connect
         topic = "directions/effector/pair/{}".format(mac_master)
