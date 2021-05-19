@@ -15,9 +15,8 @@ from ping_thread import PingThread
 from statistics import mean
 
 interface = "wlan0"
-path_env = '/home/pi/smart-directions-anchor-init/.env'
+path_env = '/home/pi/smart-directions-slave/.env'
 
-FLASK_URL = get_variable(path_env, 'FLASK_URL')
 base_path_scanner = get_variable(path_env, 'BASE_PATH_SCANNER')
 assets_path_scanner = join(base_path_scanner, get_variable(path_env, 'RELATIVE_PATH_ASSETS'))
 face_id = get_variable(path_env, 'FACE_ID')
@@ -45,8 +44,9 @@ if __name__ == '__main__':
     
     print(results,"\n\t")
     for r in results:
-        mac = r[230:247]
-        rssi = r[334:337]
+        mac_length = 17
+        mac = r.split("Address: ")[1][:mac_length]
+        rssi = r.split("RSSI: ")[1].split(" dBm")[0]
         
         if mac in dict_sniffed:
             dict_sniffed[mac].append(int(rssi))

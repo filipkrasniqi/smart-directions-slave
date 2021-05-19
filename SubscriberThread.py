@@ -1,4 +1,6 @@
 import paho.mqtt.client as mqtt
+
+from led_thread import LedThread
 from log_thread import LogThread
 
 class SubscriberThread(LogThread):
@@ -23,7 +25,8 @@ class SubscriberThread(LogThread):
         self.client.message_callback_add('directions/slave/activate/#', self.show_direction)
 
     def show_direction(self, client, userdata, msg):
-        print("ciao")
+        relative_msg_to_show = msg.payload.decode('utf-8')
+        LedThread("", relative_msg_to_show).start()
 
     def run(self):
         self.client.loop_forever()
