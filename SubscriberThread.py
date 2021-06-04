@@ -12,6 +12,10 @@ class SubscriberThread(LogThread):
         LogThread.__init__(self, "MQTT")
         self.client = mqtt.Client(client_id=own_mac)
         self.client.username_pw_set(username="slave", password="slave")
+
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            self.connection = s.connect(('localhost', 6666))
+
         #print(own_mac)
         #print(BROKER_IP)
         self.client.connect(BROKER_IP, 1884, 60)
@@ -21,9 +25,6 @@ class SubscriberThread(LogThread):
         #print(topic)
         #print(payload)
         self.client.publish(topic,payload)
-
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            self.connection = s.connect(('localhost', 6666))
 
 
     def on_connect(self, client, userdata, flags, rc):

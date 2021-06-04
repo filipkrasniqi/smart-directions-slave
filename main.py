@@ -29,6 +29,9 @@ if __name__ == '__main__':
     own_mac = os.popen(command).read()
     own_mac = own_mac[:-1]
 
+    # TODO execute hcitool apart
+
+
     # executes a scan for BLEI values
     #command = "sudo btmon" #"iw dev {} scan".format(interface)
     command = "sudo timeout 10s btmon"

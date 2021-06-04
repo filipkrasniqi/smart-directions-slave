@@ -23,7 +23,8 @@ class LedThread(LogThread):
 
     def run(self):
         msg = str.encode("{}${}${}".format(self.direction, self.color, self.execution_time))
-        self.connection.sendall(msg)
+        if self.connection is not None:
+            self.connection.sendall(msg)
 
     def kill(self):
         if self.process is not None:
