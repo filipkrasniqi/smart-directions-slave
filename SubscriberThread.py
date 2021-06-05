@@ -10,20 +10,21 @@ class SubscriberThread(LogThread):
     def __init__(self, mac_master, own_mac, face_id, BROKER_IP):
         own_mac = own_mac.upper()
         LogThread.__init__(self, "MQTT")
+        # init MQTT as slave
         self.client = mqtt.Client(client_id=own_mac)
         self.client.username_pw_set(username="slave", password="slave")
 
-        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            self.connection = s.connect(('localhost', 6666))
+        # start socket towards c++ code
+        self.connection = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.connection.connect(('localhost', 6666))
+        self.log("Connected to socket")
 
-        #print(own_mac)
-        #print(BROKER_IP)
+        # connect to MQTT
         self.client.connect(BROKER_IP, 1884, 60)
         self.client.on_connect = self.on_connect
+        # pair to master
         topic = "directions/effector/pair/{}".format(mac_master)
         payload = "{}${}".format(own_mac, face_id)
-        #print(topic)
-        #print(payload)
         self.client.publish(topic,payload)
 
 

@@ -29,17 +29,17 @@ if __name__ == '__main__':
     own_mac = os.popen(command).read()
     own_mac = own_mac[:-1]
 
-    # TODO execute hcitool apart
+    # execute hcitool: required to make btmon work
+    hcitools_command = ["hcitool", "lescan", "--duplicates"]
+    FNULL = open(os.devnull, 'w')
+    hcitools_process = subprocess.Popen(hcitools_command, stdout=FNULL, stderr=subprocess.STDOUT)
 
-
-    # executes a scan for BLEI values
-    #command = "sudo btmon" #"iw dev {} scan".format(interface)
+    # executes a scan for BLE values
     command = "sudo timeout 10s btmon"
     process = os.popen(command)
     output = process.read()
     process.close()
-    #time.sleep(10)
-    print(output)
+    
     results = output.split("HCI Event: ")
     results = list(filter(lambda x: "raspberryp" in x, results))
 
@@ -64,15 +64,14 @@ if __name__ == '__main__':
         if dict_sniffed[mac] > max_rssi:
             max_rssi = dict_sniffed[mac]
             best_mac = mac
-    assert best_mac is not None, "Not found"
-    print(dict_sniffed)
+    assert best_mac is not None, "No master has been found"
 
-    print("I AM THE BEEEEST {}".format(best_mac))
+    print("INFO: Paired with: {}".format(best_mac))
+
+    hcitools_process.terminate()
 
     SubscriberThreadInstance = SubscriberThread(best_mac, own_mac, face_id, BROKER_IP)
     SubscriberThreadInstance.start()
-
-    print("ENDED")
     
 
 # See PyCharm help at https://www.jetbrains.com/help/pycharm/

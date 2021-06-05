@@ -24,6 +24,7 @@ class LedThread(LogThread):
     def run(self):
         msg = str.encode("{}${}${}".format(self.direction, self.color, self.execution_time))
         if self.connection is not None:
+            print("SEND MSG: {}".format(msg))
             self.connection.sendall(msg)
 
     def kill(self):
