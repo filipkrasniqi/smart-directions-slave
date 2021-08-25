@@ -9,7 +9,7 @@ class SubscriberThread(LogThread):
 
     def __init__(self, mac_master, own_mac, face_id, BROKER_IP):
         own_mac = own_mac.upper()
-        LogThread.__init__(self, "MQTT")
+        LogThread.__init__(self, "MQTT {}".format(own_mac))
         # init MQTT as slave
         self.client = mqtt.Client(client_id=own_mac)
         self.client.username_pw_set(username="slave", password="slave")
@@ -23,16 +23,19 @@ class SubscriberThread(LogThread):
         self.client.connect(BROKER_IP, 1884, 60)
         self.client.on_connect = self.on_connect
         # pair to master
-        topic = "directions/effector/pair/{}".format(mac_master)
+        topic = "directions/effector/pair/{}".format(mac_master.lower())
+        self.log("PAIRING ON TOPIC {}".format(topic))
         payload = "{}${}".format(own_mac, face_id)
-        self.client.publish(topic,payload)
+        self.client.publish(topic, payload)
 
 
     def on_connect(self, client, userdata, flags, rc):
+        self.log("CONNECTED")
         self.client.subscribe("#")
         self.client.message_callback_add('directions/slave/activate/#', self.show_direction)
 
     def show_direction(self, client, userdata, msg):
+        self.log("SHOW DIRECTION")
         relative_msg_to_show, color, execution_time = msg.payload.decode('utf-8').split("$")
         LedThread("", color, relative_msg_to_show, execution_time, self.connection).start()
 

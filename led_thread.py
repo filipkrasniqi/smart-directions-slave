@@ -8,11 +8,6 @@ from log_thread import LogThread
 
 import os
 
-path_env = '/home/pi/smart-directions-slave/.env'
-
-abs_path_arrow = "{}/../assets/".format(os.path.dirname(os.path.realpath(__file__)))
-print("PATH: {}".format(abs_path_arrow))
-PATH_ASSETS = get_variable(path_env, 'PATH_ASSETS')
 
 class LedThread(LogThread):
     def __init__(self, name, color, direction, execution_time, connection):
@@ -24,7 +19,7 @@ class LedThread(LogThread):
     def run(self):
         msg = str.encode("{}${}${}".format(self.direction, self.color, self.execution_time))
         if self.connection is not None:
-            print("SEND MSG: {}".format(msg))
+            self.log("SEND MSG: {}".format(msg))
             self.connection.sendall(msg)
 
     def kill(self):
