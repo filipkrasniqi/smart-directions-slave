@@ -31,7 +31,7 @@ if __name__ == '__main__':
     print("Running scan to find closest master...")
     
     # executes a scan for BLE values
-    command = "sudo timeout 10s btmon"
+    command = "sudo timeout 20s btmon"
     process = os.popen(command)
     output = process.read()
     process.close()
